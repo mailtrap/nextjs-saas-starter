@@ -1,0 +1,59 @@
+# Minimal local Supabase — Auth + Postgres only (no Storage, Mailpit, Studio, Realtime).
+# Docs: https://supabase.com/docs/guides/local-development/cli/config
+project_id = "nextjs-saas-starter"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+
+[studio]
+enabled = false
+
+[inbucket]
+enabled = false
+
+[storage]
+enabled = false
+
+[realtime]
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://192.168.60.28:3000"
+additional_redirect_urls = [
+  "http://192.168.60.28:3000/**",
+  "http://127.0.0.1:3000/**",
+  "http://localhost:3000/**",
+]
+jwt_expiry = 3600
+enable_signup = true
+enable_anonymous_sign_ins = false
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+# Auth emails → Next.js → Mailtrap (run `pnpm dev` before testing signup).
+# Local-only secret — must match SEND_EMAIL_HOOK_SECRET in .env.local (set by pnpm db:setup).
+[auth.hook.send_email]
+enabled = true
+uri = "http://host.docker.internal:3000/api/auth/send-email"
+secrets = "v1,whsec_bG9jYWxkZXZob29rc2VjcmV0Zm9ybG9jYWxkZXZvbmx5"
+
+[edge_runtime]
+enabled = false
+
+[analytics]
+enabled = false
