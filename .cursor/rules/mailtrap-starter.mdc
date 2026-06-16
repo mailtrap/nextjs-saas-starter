@@ -1,0 +1,11 @@
+---
+description: Mailtrap SaaS starter conventions
+globs:
+  - "**/*"
+---
+
+Read AGENTS.md at repo root before editing.
+
+- Server Actions in src/actions/
+- Transactional email via sendEmail() and hosted Mailtrap template UUIDs
+- Product logic goes in src/features/
