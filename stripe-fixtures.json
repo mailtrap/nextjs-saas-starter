@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "template_version": 0,
+    "description": "Run: stripe fixtures stripe-fixtures.json --api-key $STRIPE_SECRET_KEY"
+  },
+  "fixtures": [
+    {
+      "name": "products",
+      "path": "/v1/products",
+      "method": "post",
+      "params": {
+        "name": "Free",
+        "metadata": { "plan_key": "free" }
+      }
+    },
+    {
+      "name": "price_free",
+      "path": "/v1/prices",
+      "method": "post",
+      "params": {
+        "product": "${products:id}",
+        "currency": "usd",
+        "unit_amount": 0,
+        "recurring": { "interval": "month" },
+        "metadata": { "plan_key": "free" }
+      }
+    },
+    {
+      "name": "product_pro",
+      "path": "/v1/products",
+      "method": "post",
+      "params": {
+        "name": "Pro",
+        "metadata": { "plan_key": "pro" }
+      }
+    },
+    {
+      "name": "price_pro",
+      "path": "/v1/prices",
+      "method": "post",
+      "params": {
+        "product": "${product_pro:id}",
+        "currency": "usd",
+        "unit_amount": 1900,
+        "recurring": { "interval": "month" },
+        "metadata": { "plan_key": "pro" }
+      }
+    },
+    {
+      "name": "product_team",
+      "path": "/v1/products",
+      "method": "post",
+      "params": {
+        "name": "Team",
+        "metadata": { "plan_key": "team" }
+      }
+    },
+    {
+      "name": "price_team",
+      "path": "/v1/prices",
+      "method": "post",
+      "params": {
+        "product": "${product_team:id}",
+        "currency": "usd",
+        "unit_amount": 9900,
+        "recurring": { "interval": "month" },
+        "metadata": { "plan_key": "team" }
+      }
+    }
+  ]
+}
