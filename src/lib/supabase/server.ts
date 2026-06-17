@@ -1,5 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { User } from "@supabase/supabase-js";
+import { isSupabaseConfigured } from "@/lib/utils";
+
+/** Returns the signed-in user, or null when Supabase is not configured or unreachable. */
+export async function getSessionUser(): Promise<User | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    return user;
+  } catch {
+    return null;
+  }
+}
 
 /** Creates a Supabase client for Server Components and Server Actions with cookie auth. */
 export async function createClient() {

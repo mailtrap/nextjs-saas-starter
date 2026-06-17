@@ -19,6 +19,14 @@ export function safeRedirect(path: string | null | undefined, fallback = "/dashb
   return trimmed;
 }
 
+/** True when Supabase public env vars are set (local dev, production, or Vercel). */
+export function isSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim(),
+  );
+}
+
 /** Checks whether an email is listed in ADMIN_EMAILS. */
 export function isAdminEmail(email: string): boolean {
   const admins = (process.env.ADMIN_EMAILS ?? "")

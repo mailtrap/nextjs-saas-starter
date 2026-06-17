@@ -1,11 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isAdminEmail } from "@/lib/utils";
+import { isAdminEmail, isSupabaseConfigured } from "@/lib/utils";
 
 const protectedPaths = ["/dashboard", "/settings", "/team", "/admin"];
 
 /** Refreshes Supabase session cookies and guards protected and admin routes. */
 export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const isProtected = protectedPaths.some((p) => path.startsWith(p));
+
+  if (!isSupabaseConfigured()) {
+    if (isProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirect", path);
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -27,12 +40,13 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-  const isProtected = protectedPaths.some((p) => path.startsWith(p));
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    /* Supabase unreachable — treat as logged out */
+  }
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
