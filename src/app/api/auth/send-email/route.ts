@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Webhook } from "standardwebhooks";
 import { sendEmail } from "@/lib/mailtrap";
+import { extractHttpStatus } from "@/lib/http";
 import { getAppUrl } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -17,15 +18,6 @@ type HookPayload = {
     site_url: string;
   };
 };
-
-function extractStatusCode(err: unknown): number | undefined {
-  if (!err || typeof err !== "object") return undefined;
-  const withStatus = err as { status?: unknown; response?: { status?: unknown }; cause?: unknown };
-  if (typeof withStatus.status === "number") return withStatus.status;
-  if (typeof withStatus.response?.status === "number") return withStatus.response.status;
-  if (withStatus.cause) return extractStatusCode(withStatus.cause);
-  return undefined;
-}
 
 function authConfirmLink(tokenHash: string, type: string, redirect: string): string {
   const appUrl = getAppUrl();
@@ -66,7 +58,7 @@ export async function POST(request: Request) {
         userId: user.id,
       });
     } else if (action === "recovery") {
-      const link = `${getAppUrl()}/reset-password?token_hash=${email_data.token_hash}&type=recovery`;
+      const link = authConfirmLink(email_data.token_hash, "recovery", "/reset-password");
       await sendEmail({
         templateKey: "reset_password",
         to: user.email,
@@ -100,7 +92,7 @@ export async function POST(request: Request) {
       }
     }
   } catch (err) {
-    const status = extractStatusCode(err);
+    const status = extractHttpStatus(err);
     console.error("Send email hook failed:", err);
     if (status === 429) {
       return NextResponse.json(

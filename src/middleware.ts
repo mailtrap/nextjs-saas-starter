@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminEmail } from "@/lib/utils";
 
 const protectedPaths = ["/dashboard", "/settings", "/team", "/admin"];
 
@@ -40,13 +41,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (path.startsWith("/admin") && user) {
-    const admins = (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((e) => e.trim().toLowerCase());
-    if (!admins.includes(user.email?.toLowerCase() ?? "")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  if (path.startsWith("/admin") && user?.email && !isAdminEmail(user.email)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return supabaseResponse;

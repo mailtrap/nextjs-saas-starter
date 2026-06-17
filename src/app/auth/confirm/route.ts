@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureProfile } from "@/actions/auth";
 import { createClient } from "@/lib/supabase/server";
 import { safeRedirect } from "@/lib/utils";
 
@@ -8,7 +9,12 @@ export async function GET(request: Request) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type");
   const redirect = searchParams.get("redirect");
-  const fallback = type === "email_change" ? "/settings?emailChanged=1" : "/dashboard";
+  const fallback =
+    type === "email_change"
+      ? "/settings?emailChanged=1"
+      : type === "recovery"
+        ? "/reset-password"
+        : "/dashboard";
 
   let destination = `${origin}${safeRedirect(redirect, fallback)}`;
   if (redirect) {
@@ -21,12 +27,13 @@ export async function GET(request: Request) {
 
   if (token_hash && type) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       token_hash,
       type: type as "magiclink" | "recovery" | "email" | "email_change",
     });
 
-    if (!error) {
+    if (!error && data.user?.id) {
+      await ensureProfile(data.user.id, data.user.email ?? "");
       return NextResponse.redirect(destination);
     }
   }

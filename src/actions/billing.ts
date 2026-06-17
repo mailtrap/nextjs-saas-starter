@@ -79,7 +79,7 @@ async function setFreePlan(userId: string) {
 }
 
 /** Assigns the free plan and cancels any active Stripe subscription. */
-export async function selectFreePlan() {
+async function selectFreePlan() {
   const user = await requireUser();
   await cancelActiveStripeSubscription(user.id);
   await setFreePlan(user.id);
@@ -154,7 +154,7 @@ export async function changePlan(planKey: PlanKey) {
 }
 
 /** Starts a Stripe Checkout session for a paid plan upgrade or new subscription. */
-export async function createCheckout(planKey: PlanKey) {
+async function createCheckout(planKey: PlanKey) {
   if (planKey === "free") {
     return selectFreePlan();
   }
@@ -200,17 +200,8 @@ export async function createCheckout(planKey: PlanKey) {
 
 /** Opens the Stripe Customer Portal for the current user's billing account. */
 export async function openBillingPortal(): Promise<void> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const [profile] = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.id, user.id))
-    .limit(1);
+  const user = await requireUser();
+  const profile = await getProfile(user.id);
 
   if (!profile?.stripeCustomerId) {
     throw new Error("No billing account yet. Subscribe to a paid plan first.");

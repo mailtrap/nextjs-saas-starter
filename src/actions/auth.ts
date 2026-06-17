@@ -118,7 +118,7 @@ export async function signOut() {
   redirect("/");
 }
 
-/** Creates profile and free subscription rows if they do not exist for the user. */
+/** Creates profile, free subscription, and default org if missing (e.g. magic-link sign-in). */
 export async function ensureProfile(userId: string, email: string) {
   const [existing] = await db
     .select()
@@ -129,5 +129,27 @@ export async function ensureProfile(userId: string, email: string) {
   if (!existing) {
     await db.insert(profiles).values({ id: userId, email });
     await db.insert(subscriptions).values({ userId, planKey: "free", status: "active" });
+  }
+
+  const [member] = await db
+    .select({ orgId: orgMembers.orgId })
+    .from(orgMembers)
+    .where(eq(orgMembers.userId, userId))
+    .limit(1);
+
+  if (!member) {
+    const [org] = await db
+      .insert(organizations)
+      .values({
+        name: `${email.split("@")[0] || "My"}'s Team`,
+        ownerId: userId,
+      })
+      .returning();
+
+    await db.insert(orgMembers).values({
+      orgId: org.id,
+      userId,
+      role: "owner",
+    });
   }
 }

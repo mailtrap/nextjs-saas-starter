@@ -25,6 +25,7 @@ Next.js 15 App Router · Server Actions · TypeScript strict · Supabase · Driz
 
 - Local dev: `MAILTRAP_SANDBOX=true` + `MAILTRAP_TEST_INBOX_ID` → `sendEmail()` uses Email Testing API
 - Production: unset sandbox flag → real Sending API delivery
+- Local webhook testing: `pnpm webhook:test:mailtrap` (no ngrok)
 
 ## Mailtrap MCP
 
@@ -35,7 +36,7 @@ Configured in `.mcp.json`. Tools: send email, list/create templates, sandbox mes
 - `pnpm db:setup` — Docker Supabase (Auth + Postgres only), migrations, `.env.local` Supabase vars
 - `NEXT_PUBLIC_APP_URL` in `.env.local` drives dev port (`pnpm dev`), Supabase auth redirects, and the Send Email Hook URI (`pnpm sync:env`)
 - Migrations: `supabase/migrations/` only; `pnpm db:reset` to re-apply
-- Stripe/Mailtrap webhooks need ngrok in local dev
+- Stripe webhooks: `stripe listen --forward-to localhost:PORT/api/webhooks/stripe`
 
 ## Do not
 

@@ -81,7 +81,7 @@ export function SettingsForm({ email, fullName }: Props) {
                 placeholder="Your name"
                 className="sm:flex-1"
               />
-              <Button type="submit" variant="secondary" className="shrink-0 sm:w-auto">
+              <Button type="submit" variant="outline" className="shrink-0 sm:w-auto">
                 Save
               </Button>
             </div>
@@ -110,7 +110,7 @@ export function SettingsForm({ email, fullName }: Props) {
                 placeholder="New email address"
                 className="sm:flex-1"
               />
-              <Button type="submit" variant="secondary" className="shrink-0 sm:w-auto">
+              <Button type="submit" variant="outline" className="shrink-0 sm:w-auto">
                 Update
               </Button>
             </div>
@@ -137,7 +137,7 @@ export function SettingsForm({ email, fullName }: Props) {
                 placeholder="New password (min. 8 characters)"
                 className="sm:flex-1"
               />
-              <Button type="submit" variant="secondary" className="shrink-0 sm:w-auto">
+              <Button type="submit" variant="outline" className="shrink-0 sm:w-auto">
                 Change
               </Button>
             </div>

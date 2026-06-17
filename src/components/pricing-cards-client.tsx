@@ -12,10 +12,6 @@ type Props = {
   currentPlan: PlanKey;
 };
 
-function runPlanChange(planKey: PlanKey) {
-  return changePlan(planKey);
-}
-
 type PlanButtonProps = {
   planKey: PlanKey;
   currentPlan: PlanKey;
@@ -31,7 +27,7 @@ function PlanButton({ planKey, currentPlan, label, variant }: PlanButtonProps) {
 
   function runAction() {
     startTransition(async () => {
-      await runPlanChange(planKey)();
+      await changePlan(planKey);
     });
   }
 
