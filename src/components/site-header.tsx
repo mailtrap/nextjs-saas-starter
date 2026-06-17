@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/utils";
 
 /** Renders the top navigation with auth-aware links. */
 export async function SiteHeader() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   const isAdmin = !!user?.email && isAdminEmail(user.email);
 
   return (

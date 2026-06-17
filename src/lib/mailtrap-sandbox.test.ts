@@ -1,7 +1,11 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { isMailtrapSandbox } from "./mailtrap";
 
 describe("isMailtrapSandbox", () => {
+  beforeEach(() => {
+    delete process.env.MAILTRAP_SANDBOX;
+  });
+
   afterEach(() => {
     delete process.env.MAILTRAP_SANDBOX;
   });
