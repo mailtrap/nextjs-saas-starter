@@ -29,7 +29,15 @@ export async function updateEmail(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ email });
-  if (error) return { error: error.message };
+  if (error) {
+    if (/send email|rate|too many/i.test(error.message)) {
+      return {
+        error:
+          "Email provider is rate-limited right now. Please wait a minute and try again, or upgrade Mailtrap Testing limits.",
+      };
+    }
+    return { error: error.message };
+  }
   return { success: "Check your email to confirm the new address." };
 }
 

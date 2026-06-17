@@ -24,6 +24,16 @@ function getTestInboxId(): number {
   return id;
 }
 
+function getAccountId(): number | undefined {
+  const raw = process.env.MAILTRAP_ACCOUNT_ID?.trim();
+  if (!raw) return undefined;
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("MAILTRAP_ACCOUNT_ID must be a positive integer");
+  }
+  return id;
+}
+
 /** Returns a singleton Mailtrap API client. */
 function getClient(): MailtrapClient {
   if (!client) {
@@ -31,6 +41,7 @@ function getClient(): MailtrapClient {
     if (!token) throw new Error("MAILTRAP_API_TOKEN is not set");
     client = new MailtrapClient({
       token,
+      accountId: getAccountId(),
       testInboxId: isMailtrapSandbox() ? getTestInboxId() : undefined,
     });
   }
@@ -76,6 +87,17 @@ async function attemptSend(
 
 async function clearIdempotencyKey(idempotencyKey: string): Promise<void> {
   await db.delete(sentEmails).where(eq(sentEmails.idempotencyKey, idempotencyKey));
+}
+
+function extractStatusCode(err: unknown): number | undefined {
+  if (!err || typeof err !== "object") return undefined;
+
+  const withStatus = err as { status?: unknown; response?: { status?: unknown }; cause?: unknown };
+  if (typeof withStatus.status === "number") return withStatus.status;
+  if (typeof withStatus.response?.status === "number") return withStatus.response.status;
+  if (withStatus.cause) return extractStatusCode(withStatus.cause);
+
+  return undefined;
 }
 
 /**
@@ -135,14 +157,11 @@ export async function sendEmail(params: SendEmailParams): Promise<void> {
   try {
     await deliver();
   } catch (err) {
-    const isRetryable =
-      err instanceof Error &&
-      ("status" in err
-        ? Number((err as { status?: number }).status) >= 500
-        : err.message.includes("5"));
+    const status = extractStatusCode(err);
+    const isRetryable = (status !== undefined && (status === 429 || status >= 500)) || !status;
 
     if (isRetryable) {
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1500));
       try {
         await deliver();
         return;
