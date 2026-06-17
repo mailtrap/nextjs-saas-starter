@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   changePassword,
   deleteAccount,
@@ -19,8 +20,14 @@ type Props = {
 
 /** Compact account settings: profile, email, password, and delete. */
 export function SettingsForm({ email, fullName }: Props) {
+  const router = useRouter();
+  const [name, setName] = useState(fullName);
   const [msg, setMsg] = useState<string | null>(null);
   const [msgTone, setMsgTone] = useState<"success" | "error">("success");
+
+  useEffect(() => {
+    setName(fullName);
+  }, [fullName]);
 
   function notify(text: string, tone: "success" | "error" = "success") {
     setMsg(text);
@@ -54,7 +61,11 @@ export function SettingsForm({ email, fullName }: Props) {
             action={async (fd) => {
               const r = await updateProfile(fd);
               if (r?.error) notify(r.error, "error");
-              else notify("Profile updated");
+              else {
+                setName(String(fd.get("fullName") ?? "").trim());
+                notify("Profile updated");
+                router.refresh();
+              }
             }}
             className="space-y-3 px-6 py-5"
           >
@@ -65,7 +76,8 @@ export function SettingsForm({ email, fullName }: Props) {
               <Input
                 id="fullName"
                 name="fullName"
-                defaultValue={fullName}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 className="sm:flex-1"
               />

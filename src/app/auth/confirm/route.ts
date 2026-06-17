@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
-      type: type as "magiclink" | "recovery" | "email",
+      type: type as "magiclink" | "recovery" | "email" | "email_change",
     });
 
     if (!error) {

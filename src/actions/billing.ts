@@ -101,7 +101,7 @@ export async function openBillingPortal(): Promise<void> {
   const stripe = getStripe();
   const session = await stripe.billingPortal.sessions.create({
     customer: profile.stripeCustomerId,
-    return_url: `${getAppUrl()}/dashboard`,
+    return_url: `${getAppUrl()}/dashboard?billing=updated`,
   });
 
   redirect(session.url);

@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /** Returns the public app URL from env or localhost default. */
 export function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000";
 }
 
 /** Returns a same-origin path for post-auth redirects, blocking open redirects. */

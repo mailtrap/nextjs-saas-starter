@@ -1,22 +1,33 @@
 import { eq } from "drizzle-orm";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { BillingPortalButton } from "@/components/billing-portal-button";
-
-export const dynamic = "force-dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PLANS } from "@/config/plans";
 import { db } from "@/db";
 import { profiles, subscriptions } from "@/db/schema";
 import { createClient } from "@/lib/supabase/server";
+import { syncSubscriptionFromStripe } from "@/lib/stripe-webhooks";
+
+export const dynamic = "force-dynamic";
 
 /** Shows account status, current plan, and link to Stripe billing portal. */
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ checkout?: string; billing?: string }>;
+}) {
+  const { checkout, billing } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) redirect("/login?redirect=/dashboard");
+
+  if (checkout === "success" || billing === "updated") {
+    await syncSubscriptionFromStripe(user.id);
+  }
 
   const [profile] = await db
     .select()
@@ -36,6 +47,18 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-12">
       <h1 className="text-2xl font-bold">Dashboard</h1>
+
+      {checkout === "success" && (
+        <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+          Payment received. Your plan has been synced from Stripe.
+        </p>
+      )}
+
+      {billing === "updated" && (
+        <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
+          Billing updated. Your current plan is shown below.
+        </p>
+      )}
 
       <Card>
         <CardHeader>

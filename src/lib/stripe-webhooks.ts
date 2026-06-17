@@ -1,9 +1,10 @@
 import { eq, sql } from "drizzle-orm";
 import type Stripe from "stripe";
-import { PLANS } from "@/config/plans";
+import { PLANS, type PlanKey } from "@/config/plans";
 import { db } from "@/db";
 import { profiles, subscriptions } from "@/db/schema";
 import { sendEmail } from "@/lib/mailtrap";
+import { getStripe } from "@/lib/stripe";
 import { getAppUrl } from "@/lib/utils";
 
 /** Resolves a plan key to its display name. */
@@ -12,10 +13,99 @@ function planName(key: string): string {
   return key;
 }
 
+/** Maps a Stripe price to a local plan key (env IDs + price metadata fallback). */
+function planKeyFromStripePrice(price: Stripe.Price | undefined): PlanKey {
+  const id = price?.id;
+  if (id === process.env.STRIPE_PRICE_TEAM) return "team";
+  if (id === process.env.STRIPE_PRICE_PRO) return "pro";
+  if (id === process.env.STRIPE_PRICE_FREE) return "free";
+  const meta = price?.metadata?.plan_key;
+  if (meta === "team" || meta === "pro" || meta === "free") return meta;
+  return "pro";
+}
+
+async function resolveUserIdForCustomer(customerId: string): Promise<string | null> {
+  const [profile] = await db
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(eq(profiles.stripeCustomerId, customerId))
+    .limit(1);
+  return profile?.id ?? null;
+}
+
+async function resolveUserIdFromSubscription(sub: Stripe.Subscription): Promise<string | null> {
+  if (sub.metadata?.user_id) return sub.metadata.user_id;
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+  if (!customerId) return null;
+  return resolveUserIdForCustomer(customerId);
+}
+
+async function upsertSubscriptionRow(
+  userId: string,
+  sub: Stripe.Subscription,
+  planKey?: PlanKey,
+) {
+  const price = sub.items.data[0]?.price;
+  const resolvedPlan = planKey ?? planKeyFromStripePrice(price);
+
+  await db
+    .insert(subscriptions)
+    .values({
+      userId,
+      stripeSubscriptionId: sub.id,
+      planKey: resolvedPlan,
+      status: sub.status,
+    })
+    .onConflictDoUpdate({
+      target: subscriptions.userId,
+      set: {
+        stripeSubscriptionId: sub.id,
+        planKey: resolvedPlan,
+        status: sub.status,
+        updatedAt: new Date(),
+      },
+    });
+}
+
+/** Pulls the active Stripe subscription into the local DB (fallback when webhooks are missed). */
+export async function syncSubscriptionFromStripe(userId: string): Promise<void> {
+  const [profile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1);
+
+  if (!profile?.stripeCustomerId) return;
+
+  const stripe = getStripe();
+  const { data } = await stripe.subscriptions.list({
+    customer: profile.stripeCustomerId,
+    status: "all",
+    limit: 10,
+  });
+
+  const active = data.find((s) => s.status === "active" || s.status === "trialing");
+
+  if (!active) {
+    await db
+      .update(subscriptions)
+      .set({ planKey: "free", status: "canceled", updatedAt: new Date() })
+      .where(eq(subscriptions.userId, userId));
+    return;
+  }
+
+  await upsertSubscriptionRow(userId, active);
+}
+
 /** Syncs subscription after checkout and sends a payment receipt email. */
 export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const userId = session.metadata?.user_id;
-  const planKey = session.metadata?.plan_key ?? "pro";
+  let userId = session.metadata?.user_id;
+  if (!userId) {
+    const customerId =
+      typeof session.customer === "string" ? session.customer : session.customer?.id;
+    if (customerId) userId = (await resolveUserIdForCustomer(customerId)) ?? undefined;
+  }
+  const planKey = (session.metadata?.plan_key ?? "pro") as PlanKey;
   if (!userId) return;
 
   await db
@@ -59,13 +149,11 @@ export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) 
 
 /** Updates subscription state and sends a plan-change email when the price changes. */
 export async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
-  const userId = sub.metadata?.user_id;
+  const userId = await resolveUserIdFromSubscription(sub);
   if (!userId) return;
 
   const priceId = sub.items.data[0]?.price.id;
-  let planKey = "pro";
-  if (priceId === process.env.STRIPE_PRICE_TEAM) planKey = "team";
-  if (priceId === process.env.STRIPE_PRICE_PRO) planKey = "pro";
+  const planKey = planKeyFromStripePrice(sub.items.data[0]?.price);
 
   const [existing] = await db
     .select()
@@ -75,23 +163,7 @@ export async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
 
   const oldPlan = existing?.planKey ?? "free";
 
-  await db
-    .insert(subscriptions)
-    .values({
-      userId,
-      stripeSubscriptionId: sub.id,
-      planKey,
-      status: sub.status,
-    })
-    .onConflictDoUpdate({
-      target: subscriptions.userId,
-      set: {
-        stripeSubscriptionId: sub.id,
-        planKey,
-        status: sub.status,
-        updatedAt: new Date(),
-      },
-    });
+  await upsertSubscriptionRow(userId, sub, planKey);
 
   if (oldPlan !== planKey) {
     const [profile] = await db
@@ -114,7 +186,7 @@ export async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
 
 /** Downgrades the user to free and sends a cancellation email. */
 export async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
-  const userId = sub.metadata?.user_id;
+  const userId = await resolveUserIdFromSubscription(sub);
   if (!userId) return;
 
   const [existing] = await db
