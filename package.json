@@ -18,7 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "lighthouse": "node scripts/lighthouse.mjs"
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "webhook:test:mailtrap": "node scripts/test-mailtrap-webhook.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",
