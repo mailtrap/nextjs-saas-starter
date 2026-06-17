@@ -10,6 +10,8 @@ fi
 
 mkdir -p "${HOME}/.supabase"
 
+node scripts/sync-app-env.mjs
+
 echo "Starting Supabase..."
 npx supabase@latest start
 

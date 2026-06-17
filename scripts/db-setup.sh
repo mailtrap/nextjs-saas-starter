@@ -21,6 +21,8 @@ if [[ ! -f .env.local ]]; then
   echo "Created .env.local from .env.example"
 fi
 
+node scripts/sync-app-env.mjs
+
 echo "Starting Supabase (Auth + Postgres)..."
 npx supabase@latest stop 2>/dev/null || true
 npx supabase@latest start
@@ -35,9 +37,10 @@ cat <<'EOF'
 Done. Local Supabase is running.
 
 Next steps:
-  1. Add Stripe + Mailtrap keys to .env.local
-  2. pnpm dev
-  3. Open http://127.0.0.1:3000
+  1. Set NEXT_PUBLIC_APP_URL in .env.local if the default port is taken, then: pnpm sync:env && pnpm db:stop && pnpm db:start
+  2. Add Stripe + Mailtrap keys to .env.local
+  3. pnpm dev
+  4. Open the URL shown by pnpm sync:env (NEXT_PUBLIC_APP_URL)
 
 Stop Supabase: pnpm db:stop
 EOF
