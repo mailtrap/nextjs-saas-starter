@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/utils";
 
 /** Updates the current user's display name in the profile table. */
 export async function updateProfile(formData: FormData) {
@@ -28,7 +29,10 @@ export async function updateProfile(formData: FormData) {
 export async function updateEmail(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ email });
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${getAppUrl()}/settings?emailChanged=1` },
+  );
   if (error) {
     if (/send email|rate|too many/i.test(error.message)) {
       return {

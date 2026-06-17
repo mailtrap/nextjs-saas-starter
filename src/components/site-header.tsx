@@ -2,6 +2,7 @@ import Link from "next/link";
 import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/utils";
 
 /** Renders the top navigation with auth-aware links. */
 export async function SiteHeader() {
@@ -9,6 +10,7 @@ export async function SiteHeader() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const isAdmin = !!user?.email && isAdminEmail(user.email);
 
   return (
     <header className="border-b border-border">
@@ -28,6 +30,11 @@ export async function SiteHeader() {
               <Link href="/team" className="hover:underline">
                 Team
               </Link>
+              {isAdmin ? (
+                <Link href="/admin/emails" className="hover:underline">
+                  Admin
+                </Link>
+              ) : null}
               <form action={signOut}>
                 <Button type="submit" variant="ghost" size="sm">
                   Sign out

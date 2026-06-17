@@ -40,6 +40,7 @@ enable_anonymous_sign_ins = false
 [auth.email]
 enable_signup = true
 enable_confirmations = false
+double_confirm_changes = false
 
 # Auth emails → Next.js → Mailtrap (run `pnpm dev` before testing signup).
 # Local-only secret — must match SEND_EMAIL_HOOK_SECRET in .env.local (set by pnpm db:setup).
