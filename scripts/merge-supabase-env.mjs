@@ -2,7 +2,7 @@
 /**
  * Writes the four Supabase local vars into .env.local (creates from .env.example if missing).
  */
-import { execSync } from "node:child_process";
+import { execSync, spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -35,7 +35,6 @@ if (start === -1) {
 const { API_URL, ANON_KEY, SERVICE_ROLE_KEY, DB_URL } = JSON.parse(raw.slice(start));
 
 const updates = {
-  NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3000",
   NEXT_PUBLIC_SUPABASE_URL: API_URL,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: SERVICE_ROLE_KEY,
@@ -59,3 +58,5 @@ env = hookPattern.test(env)
 
 writeFileSync(envPath, env);
 console.log("Updated .env.local with local Supabase credentials.");
+
+spawnSync("node", ["scripts/sync-app-env.mjs"], { cwd: root, stdio: "inherit" });
