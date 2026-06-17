@@ -31,12 +31,8 @@ enabled = false
 
 [auth]
 enabled = true
-site_url = "http://192.168.60.28:3000"
-additional_redirect_urls = [
-  "http://192.168.60.28:3000/**",
-  "http://127.0.0.1:3000/**",
-  "http://localhost:3000/**",
-]
+site_url = "env(NEXT_PUBLIC_APP_URL)"
+additional_redirect_urls = ["env(SUPABASE_AUTH_REDIRECT_URLS)"]
 jwt_expiry = 3600
 enable_signup = true
 enable_anonymous_sign_ins = false
@@ -49,7 +45,7 @@ enable_confirmations = false
 # Local-only secret — must match SEND_EMAIL_HOOK_SECRET in .env.local (set by pnpm db:setup).
 [auth.hook.send_email]
 enabled = true
-uri = "http://host.docker.internal:3000/api/auth/send-email"
+uri = "env(SUPABASE_SEND_EMAIL_HOOK_URI)"
 secrets = "v1,whsec_bG9jYWxkZXZob29rc2VjcmV0Zm9ybG9jYWxkZXZvbmx5"
 
 [edge_runtime]
