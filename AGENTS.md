@@ -33,7 +33,7 @@ Configured in `.mcp.json`. Tools: send email, list/create templates, sandbox mes
 ## Local dev
 
 - `pnpm db:setup` — Docker Supabase (Auth + Postgres only), migrations, `.env.local` Supabase vars
-- `pnpm dev` — app on :3000 (required for auth emails via Send Email Hook → Mailtrap)
+- `NEXT_PUBLIC_APP_URL` in `.env.local` drives dev port (`pnpm dev`), Supabase auth redirects, and the Send Email Hook URI (`pnpm sync:env`)
 - Migrations: `supabase/migrations/` only; `pnpm db:reset` to re-apply
 - Stripe/Mailtrap webhooks need ngrok in local dev
 

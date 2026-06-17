@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -H 0.0.0.0",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/start.mjs",
+    "sync:env": "node scripts/sync-app-env.mjs",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -17,7 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "lighthouse": "lhci autorun"
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.2",

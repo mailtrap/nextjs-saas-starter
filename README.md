@@ -24,14 +24,14 @@ stripe fixtures stripe-fixtures.json --api-key $STRIPE_SECRET_KEY   # optional: 
 pnpm dev
 ```
 
-Open http://127.0.0.1:3000
+Open the URL from `NEXT_PUBLIC_APP_URL` in `.env.local` (default `http://127.0.0.1:3000`). If port 3000 is taken, change that value and run `pnpm sync:env && pnpm db:stop && pnpm db:start`.
 
 ### What `pnpm db:setup` does
 
 1. Starts **only** what this app needs: Supabase Auth + Postgres (not Storage, GraphQL, Mailpit, etc.)
 2. Applies [`supabase/migrations/`](supabase/migrations/)
 3. Writes four Supabase values into `.env.local` (URL, anon key, service role, `DATABASE_URL`)
-4. Configures the Send Email Hook so auth emails go through Mailtrap (requires `pnpm dev` on port 3000)
+4. Syncs Supabase auth URLs and the Send Email Hook from `NEXT_PUBLIC_APP_URL` (requires `pnpm dev` on the same host/port)
 
 **Stop Docker:** `pnpm db:stop` · **Reset database:** `pnpm db:reset`
 
@@ -43,6 +43,7 @@ Create a project at [supabase.com](https://supabase.com), run the SQL in `supaba
 
 | Group | What you need |
 |-------|----------------|
+| **App** | `NEXT_PUBLIC_APP_URL` — dev port, Stripe redirects, Supabase `site_url` + hook (run `pnpm sync:env` after changing) |
 | **Supabase** | 4 vars — auto-filled locally; from dashboard when hosted |
 | **Stripe** | Test keys + 3 price IDs |
 | **Mailtrap** | API token, sandbox flag + inbox ID (local), from address, 8 template UUIDs |
