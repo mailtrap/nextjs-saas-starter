@@ -55,6 +55,7 @@ Full list: [`.env.example`](.env.example)
 
 ```bash
 MAILTRAP_SANDBOX=true
+MAILTRAP_ACCOUNT_ID=12345      # optional, removes Mailtrap SDK accountId warning
 MAILTRAP_TEST_INBOX_ID=123456   # Email Testing → inbox → ID in settings
 ```
 
