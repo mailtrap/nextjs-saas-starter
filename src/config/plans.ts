@@ -26,3 +26,10 @@ export const PLANS = {
 } as const;
 
 export type PlanKey = keyof typeof PLANS;
+
+const PLAN_RANK: Record<PlanKey, number> = { free: 0, pro: 1, team: 2 };
+
+/** True when moving from a higher tier to a lower one. */
+export function isPlanDowngrade(from: PlanKey, to: PlanKey): boolean {
+  return PLAN_RANK[to] < PLAN_RANK[from];
+}
