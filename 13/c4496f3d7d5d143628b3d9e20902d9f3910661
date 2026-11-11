@@ -1,0 +1,21 @@
+package.json
+  s_779ccf699b31d4::t_65f06608bd6a72 47
+pnpm-lock.yaml
+  s_779ccf699b31d4::t_1fe3000cdcf893 43,73-74,909-911,3209-3211,3214-3216,4602,4604,6824,6842,7016,7018,7020
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "13c4496f3d7d5d143628b3d9e20902d9f3910661",
+  "prompts": {},
+  "sessions": {
+    "s_779ccf699b31d4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "35b69c66-4da4-4d9a-8e7c-46792752b1d9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Volodymyr Pihol <volodymyr.pihol@railsware.com>"
+    }
+  }
+}
