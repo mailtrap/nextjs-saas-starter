@@ -8,7 +8,7 @@ For learners, indie hackers, and juniors — not production-grade multi-tenant S
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org) 20+
+- [Node.js](https://nodejs.org) 22.19+
 - [pnpm](https://pnpm.io) 10+
 - [Docker Desktop](https://docs.docker.com/get-docker/) (for local Supabase)
 - [Stripe CLI](https://stripe.com/docs/stripe-cli) (for local billing webhooks)
